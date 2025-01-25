@@ -1,15 +1,20 @@
 {
-  "name": "Xenovia AI",
+  "name": "whatsapp-bot",
   "version": "1.0.0",
-  "description": "WhatsApp bot using Baileys and Google Gemini API",
-  "main": "bot.js",
+  "description": "A WhatsApp bot that integrates with the Gemini API",
+  "main": "index.js",
   "scripts": {
-    "start": "node bot.js"
+    "start": "node index.js"
   },
   "dependencies": {
-    "@adiwajshing/baileys": "^4.1.0",
-    "google-generativeai": "^1.0.0",
+    "@adiwajshing/baileys": "^4.4.0",
     "express": "^4.17.1",
+    "axios": "^1.0.0",
     "dotenv": "^16.0.0"
-  }
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "license": "MIT"
 }
