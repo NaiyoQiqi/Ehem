@@ -26,7 +26,7 @@ const { state, saveCreds } = useMultiFileAuthState('./auth_info');
 let connection;
 
 // Definisikan nama bot
-const botName = 'GeminiBot';
+const botName = 'Xenovia AI';
 
 // Cek apakah `authState` sudah valid
 if (!state || !state.creds) {
