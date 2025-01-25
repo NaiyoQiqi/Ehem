@@ -1,4 +1,4 @@
-require('dotenv').config();
+const qrcode = require('qrcode-terminal');
 const { default: makeWASocket, fetchLatestBaileysVersion, useMultiFileAuthState } = require('@adiwajshing/baileys');
 const express = require('express');
 const axios = require('axios');
@@ -26,7 +26,7 @@ const { state, saveCreds } = useMultiFileAuthState('./auth_info');
 let connection;
 
 // Definisikan nama bot
-const botName = 'Xenovia AI';
+const botName = 'GeminiBot';
 
 // Cek apakah `authState` sudah valid
 if (!state || !state.creds) {
@@ -36,8 +36,13 @@ if (!state || !state.creds) {
     const { version } = await fetchLatestBaileysVersion();
     connection = makeWASocket({
       version,
-      auth: state, // Gunakan kredensial yang sudah disimpan
-      printQRInTerminal: true,  // Cetak QR di terminal
+      auth: state,  // Gunakan kredensial yang sudah disimpan
+      printQRInTerminal: false,  // Nonaktifkan print QR di terminal
+    });
+
+    // Tampilkan QR code dalam bentuk ASCII
+    qrcode.generate(connection.qr, { small: true }, (qrCodeText) => {
+      console.log(qrCodeText);  // QR code dalam bentuk teks
     });
 
     connection.ev.on('messages.upsert', async (m) => {
