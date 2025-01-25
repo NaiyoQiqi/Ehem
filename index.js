@@ -1,27 +1,29 @@
+require('dotenv').config();
 const { default: makeWASocket, fetchLatestBaileysVersion, useMultiFileAuthState } = require('@adiwajshing/baileys');
 const express = require('express');
-const genai = require('google-generativeai');
+const { OpenAI } = require('openai');
 const app = express();
 
-// Setup Gemini API
-const GEN_API_KEY = process.env.GEN_API_KEY;
-const apiUrl = 'https://generativeai.googleapis.com/v1/models/gemini:generateText';  // Endpoint API Gemini (pastikan ini benar)
+// Setup OpenAI API
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-// Fungsi untuk mengirim prompt ke API Gemini
-async function sendToGemini(prompt) {
+// Fungsi untuk mengirim prompt ke API OpenAI
+async function sendToOpenAI(prompt) {
   try {
-    const response = await axios.post(apiUrl, {
-      prompt: prompt,
-      api_key: GEN_API_KEY,
+    const response = await openai.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      model: 'gpt-3.5-turbo',  // Pilih model sesuai kebutuhan
     });
-    return response.data;
+    return response.choices[0].message.content;
   } catch (error) {
-    console.error('Error calling Gemini API:', error);
+    console.error('Error calling OpenAI API:', error);
   }
 }
 
 // Setup untuk autentikasi Baileys
-const { state, saveCreds } = useMultiFileAuthState('./auth_info');  // Menyimpan kredensial di folder auth_info
+const { state, saveCreds } = useMultiFileAuthState('./auth_info');
 let connection;
 
 // Definisikan nama bot
@@ -32,7 +34,7 @@ async function startWhatsApp() {
   connection = makeWASocket({
     version,
     auth: state, // Gunakan kredensial yang sudah disimpan
-    printQRInTerminal: true, // Cetak QR code di terminal untuk pemindaian pertama kali
+    printQRInTerminal: true, // Cetak QR code di terminal
   });
 
   connection.ev.on('messages.upsert', async (m) => {
@@ -49,11 +51,11 @@ async function startWhatsApp() {
 
       console.log(`Received message: ${text} from ${sender}`);
 
-      // Kirim pesan ke Gemini untuk diproses
-      const response = await sendToGemini(text);
-      
+      // Kirim pesan ke OpenAI untuk diproses
+      const response = await sendToOpenAI(text);
+
       // Kirim kembali respon dengan nama bot
-      const responseText = `Hello, I'm ${botName}! Here's the response: ${response.text}`;
+      const responseText = `Hello, I'm ${botName}! Here's the response: ${response}`;
       await sendMessage(sender, responseText);
     }
   });
