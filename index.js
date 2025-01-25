@@ -1,4 +1,4 @@
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode');
 const { default: makeWASocket, fetchLatestBaileysVersion, useMultiFileAuthState } = require('@adiwajshing/baileys');
 const express = require('express');
 const axios = require('axios');
@@ -28,7 +28,6 @@ let connection;
 // Definisikan nama bot
 const botName = 'GeminiBot';
 
-// Cek apakah `authState` sudah valid
 if (!state || !state.creds) {
   console.log('No credentials found, please scan the QR code first.');
 } else {
@@ -37,12 +36,16 @@ if (!state || !state.creds) {
     connection = makeWASocket({
       version,
       auth: state,  // Gunakan kredensial yang sudah disimpan
-      printQRInTerminal: false,  // Nonaktifkan print QR di terminal
     });
 
-    // Tampilkan QR code dalam bentuk ASCII
-    qrcode.generate(connection.qr, { small: true }, (qrCodeText) => {
-      console.log(qrCodeText);  // QR code dalam bentuk teks
+    // Generate QR code as image URL
+    qrcode.toDataURL(connection.qr, (err, url) => {
+      if (err) {
+        console.error('Failed to generate QR code:', err);
+      } else {
+        console.log(`Please scan this QR code: ${url}`);
+        // Kirim URL QR code ke server atau ke aplikasi lain, bisa juga disimpan untuk akses nanti
+      }
     });
 
     connection.ev.on('messages.upsert', async (m) => {
