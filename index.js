@@ -1,13 +1,26 @@
 require('dotenv').config();
 const { default: makeWASocket, fetchLatestBaileysVersion, useMultiFileAuthState } = require('@adiwajshing/baileys');
 const express = require('express');
-const { OpenAI } = require('openai');
+const axios = require('axios');
 const app = express();
 
-// Setup OpenAI API
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Setup Gemini API
+const GEN_API_KEY = process.env.GEN_API_KEY;
+const apiUrl = 'https://generativeai.googleapis.com/v1/models/gemini:generateText';  // Endpoint API Gemini (pastikan ini benar)
+
+// Fungsi untuk mengirim prompt ke API Gemini
+async function sendToGemini(prompt) {
+  try {
+    const response = await axios.post(apiUrl, {
+      prompt: prompt,
+      api_key: GEN_API_KEY,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error calling Gemini API:', error);
+    return null;
+  }
+}
 
 // Setup untuk autentikasi Baileys
 const { state, saveCreds } = useMultiFileAuthState('./auth_info');
@@ -34,22 +47,15 @@ async function startWhatsApp() {
 
       console.log(`Received message: ${text} from ${sender}`);
 
-      const translationResponse = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'user', content: `Translate this text to Indonesian: ${text}` },
-        ],
-      });
+      // Kirim pesan ke Gemini untuk diproses
+      const response = await sendToGemini(text);
 
-      const translatedText = translationResponse.choices[0].message.content;
-
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: translatedText }],
-      });
-
-      const responseText = `Hello, I'm ${botName}! Here's the response: ${response.choices[0].message.content}`;
-      await sendMessage(sender, responseText);
+      if (response && response.generatedText) {
+        const responseText = `Hello, I'm ${botName}! Here's the response: ${response.generatedText}`;
+        await sendMessage(sender, responseText);
+      } else {
+        await sendMessage(sender, "Sorry, I couldn't process your request.");
+      }
     }
   });
 
