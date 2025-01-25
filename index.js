@@ -28,49 +28,54 @@ let connection;
 // Definisikan nama bot
 const botName = 'GeminiBot';
 
-async function startWhatsApp() {
-  const { version } = await fetchLatestBaileysVersion();
-  connection = makeWASocket({
-    version,
-    auth: state,
-    printQRInTerminal: true,  // Cetak QR di terminal
-  });
+// Cek apakah `authState` sudah valid
+if (!state || !state.creds) {
+  console.log('No credentials found, please scan the QR code first.');
+} else {
+  async function startWhatsApp() {
+    const { version } = await fetchLatestBaileysVersion();
+    connection = makeWASocket({
+      version,
+      auth: state, // Gunakan kredensial yang sudah disimpan
+      printQRInTerminal: true,  // Cetak QR di terminal
+    });
 
-  connection.ev.on('messages.upsert', async (m) => {
-    if (m.type === 'notify') {
-      const message = m.messages[0];
-      const sender = message.key.remoteJid;
-      const text = message.message.conversation;
+    connection.ev.on('messages.upsert', async (m) => {
+      if (m.type === 'notify') {
+        const message = m.messages[0];
+        const sender = message.key.remoteJid;
+        const text = message.message.conversation;
 
-      // Cek jika pesan datang dari grup
-      if (sender.endsWith('@g.us')) return;  // Jangan respon jika pesan datang dari grup
+        // Cek jika pesan datang dari grup
+        if (sender.endsWith('@g.us')) return;  // Jangan respon jika pesan datang dari grup
 
-      console.log(`Received message: ${text} from ${sender}`);
+        console.log(`Received message: ${text} from ${sender}`);
 
-      // Kirim pesan ke Gemini untuk diproses
-      const response = await sendToGemini(text);
+        // Kirim pesan ke Gemini untuk diproses
+        const response = await sendToGemini(text);
 
-      // Kirim kembali respon dengan nama bot
-      const responseText = `Hello, I'm ${botName}! Here's the response: ${response.text}`;
-      await sendMessage(sender, responseText);
-    }
-  });
+        // Kirim kembali respon dengan nama bot
+        const responseText = `Hello, I'm ${botName}! Here's the response: ${response.text}`;
+        await sendMessage(sender, responseText);
+      }
+    });
 
-  // Simpan kredensial saat sesi ditutup
-  connection.ev.on('connection.update', (update) => {
-    if (update.connection === 'close') saveCreds();
-  });
+    // Simpan kredensial saat sesi ditutup
+    connection.ev.on('connection.update', (update) => {
+      if (update.connection === 'close') saveCreds();
+    });
 
-  connection.ev.on('connection.update', update => {
-    if (update.connection === 'open') console.log('WhatsApp connected');
-  });
+    connection.ev.on('connection.update', update => {
+      if (update.connection === 'open') console.log('WhatsApp connected');
+    });
+  }
+
+  async function sendMessage(to, message) {
+    await connection.sendMessage(to, { text: message });
+  }
+
+  startWhatsApp();
 }
-
-async function sendMessage(to, message) {
-  await connection.sendMessage(to, { text: message });
-}
-
-startWhatsApp();
 
 app.listen(8000, () => {
   console.log('Server is running on port 8000');
