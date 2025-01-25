@@ -1,7 +1,6 @@
-require('dotenv').config();
 const { default: makeWASocket, fetchLatestBaileysVersion, useMultiFileAuthState } = require('@adiwajshing/baileys');
 const express = require('express');
-const axios = require('axios');
+const genai = require('google-generativeai');
 const app = express();
 
 // Setup Gemini API
@@ -22,7 +21,7 @@ async function sendToGemini(prompt) {
 }
 
 // Setup untuk autentikasi Baileys
-const { state, saveCreds } = useMultiFileAuthState('./auth_info');
+const { state, saveCreds } = useMultiFileAuthState('./auth_info');  // Menyimpan kredensial di folder auth_info
 let connection;
 
 // Definisikan nama bot
@@ -33,7 +32,7 @@ async function startWhatsApp() {
   connection = makeWASocket({
     version,
     auth: state, // Gunakan kredensial yang sudah disimpan
-    printQRInTerminal: true, // Cetak QR code di terminal
+    printQRInTerminal: true, // Cetak QR code di terminal untuk pemindaian pertama kali
   });
 
   connection.ev.on('messages.upsert', async (m) => {
