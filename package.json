@@ -1,16 +1,17 @@
 {
   "name": "whatsapp-bot",
   "version": "1.0.0",
-  "description": "A WhatsApp bot that integrates with the Gemini API",
+  "description": "A WhatsApp bot that integrates with Gemini API (or OpenAI)",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "@adiwajshing/baileys": "^4.4.0",
-    "express": "^4.17.1",
     "axios": "^1.0.0",
-    "dotenv": "^16.0.0"
+    "dotenv": "^16.0.0",
+    "express": "^4.17.1",
+    "google-generativeai": "^1.0.0"  // Jika tersedia, jika tidak bisa menggunakan OpenAI
   },
   "devDependencies": {},
   "engines": {
